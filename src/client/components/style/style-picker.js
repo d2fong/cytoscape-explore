@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import Select from 'react-select';
 import { MAPPING } from '../../../model/style';
 import _ from 'lodash';
+import { Select, MenuItem, FormControl, InputLabel } from "@material-ui/core";
 
 export class StylePicker extends Component { 
 
@@ -14,6 +14,7 @@ export class StylePicker extends Component {
   }
 
   onShow() {
+    console.log("onShow");
     const { selector, property  } = this.props;
     const style = this.controller.cySyncher.getStyle(selector, property);
     switch(style.mapping) {
@@ -47,56 +48,49 @@ export class StylePicker extends Component {
   }
 
   handleMapping(mapping) {
+    console.log("handleMapping");
     const change = { mapping };
-
     this.setState(change);
-
     this.onStyleChanged(_.assign({}, this.state, change));
   }
 
   handleAttribute(attribute) {
-
     const change = { attribute };
-
     this.setState(change);
-
     this.onStyleChanged(_.assign({}, this.state, change));
   }
 
   handleScalarValue(scalarValue){
     const change = { scalarValue };
-
     this.setState(change);
-
     this.onStyleChanged(_.assign({}, this.state, change));
   }
 
   handleMappingValue(mappingValue){
     const change = { mappingValue };
-
     this.setState(change);
-
     this.onStyleChanged(_.assign({}, this.state, change));
   }
 
   render() {
-    const options = [
-      { value: MAPPING.VALUE,  label: this.props.valueLabel || 'Default Value' },
-      { value: MAPPING.LINEAR, label: this.props.mappingLabel || 'Attribute Mapping' }
-    ];
-    const selectedOption = options.find(o => o.value === this.state.mapping);
-
     return (
       <div className="style-picker">
         <div className="style-picker-heading">
           {this.props.title || "Visual Property"}
         </div>
         <div className="style-picker-body"> 
-          <Select 
-            options={options}
-            value={selectedOption}
-            onChange={option => this.handleMapping(option.value)}
-          /> 
+          <FormControl style={{width:'90%'}} variant="outlined">
+            <InputLabel id="mapping-label">Style Type</InputLabel>
+            <Select 
+              labelId="mapping-label"
+              label="Style Type"
+              value={this.state.mapping}
+              onChange={event => this.handleMapping(event.target.value)} 
+              >
+              <MenuItem value={MAPPING.VALUE}>{this.props.valueLabel || 'Default Value'}</MenuItem>
+              <MenuItem value={MAPPING.LINEAR}>{this.props.mappingLabel || 'Attribute Mapping'}</MenuItem>
+            </Select>
+          </FormControl>
           { (this.state.mapping == MAPPING.VALUE) 
             ? this.renderValue()
             : this.renderAttribute() }
@@ -115,17 +109,23 @@ export class StylePicker extends Component {
   }
 
   renderAttribute() {
-    const attributeOptions = this.controller.getPublicAttributes().map(a => ({value: a, label: a}));
-    const selectedOption = attributeOptions.find(o => o.value === this.state.attribute);
+    const attributes = this.controller.getPublicAttributes();
     return (
       <div className="style-picker-attribute">
-        <Select
-          onChange={option => this.handleAttribute(option.value)}
-          options={attributeOptions}
-          value={selectedOption}
-          placeholder="Select Attribute..."
-        />
-        { selectedOption && this.renderMapping() }
+        <FormControl style={{width:'90%'}} variant="outlined">
+          <InputLabel id="attribute-label">Attribute</InputLabel>
+          <Select 
+            labelId="attribute-label"
+            label="Attribute"
+            value={this.state.attribute}
+            onChange={event => this.handleAttribute(event.target.value)} 
+            >
+            {attributes.map(a => 
+              <MenuItem key={a} value={a}>{a}</MenuItem>)
+            }
+          </Select>
+        </FormControl>
+        { this.state.attribute && this.renderMapping() }
       </div>
     );
   }
