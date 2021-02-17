@@ -26,12 +26,13 @@ const postNetwork = async (importBody, req, res, next) => {
     const publicUrl = `${BASE_URL}/document/${id}`;
     const privateUrl = `${publicUrl}/${secret}`;
 
-    importBody(cy, body);
     cy.data({ id });
 
-    const cySyncher = new CytoscapeSyncher(cy, secret);
+    const cySyncher = new CytoscapeSyncher(cy, 'secret');
+    importBody(cy, body);
 
     await cySyncher.create();
+
 
     cySyncher.destroy();
     cy.destroy();
