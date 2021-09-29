@@ -7,6 +7,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import { AppLogoIcon } from '../svg-icons';
+
 import SearchIcon from '@material-ui/icons/Search';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -20,6 +21,7 @@ import Divider from '@material-ui/core/Divider';
 import Tooltip from '@material-ui/core/Tooltip';
 import LayoutPanel from '../layout/layout-panel';
 import Cy3NetworkImportDialog from '../network-import/cy3-network-import-dialog';
+import NDExNetworkImportDialog from '../network-import/ndex-network-import-dialog';
 import uuid from 'uuid';
 import ImportWizard from '../network-import/import-wizard';
 
@@ -204,9 +206,17 @@ export class Header extends Component {
             )}
           </AppBar>
         </div>
-        {dialogName === 'network-import' && (
+        {dialogName === 'cy3-network-import' && (
           <Cy3NetworkImportDialog
-            id="network-import"
+            id="cy3-network-import"
+            controller={this.controller}
+            open={true}
+            onClose={() => this.hideDialog()}
+          />
+          )}
+          {dialogName === 'ndex-network-import' &&(
+          <NDExNetworkImportDialog
+            id = "ndex-network-import"
             controller={this.controller}
             open={true}
             onClose={() => this.hideDialog()}

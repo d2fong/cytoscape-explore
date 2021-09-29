@@ -5,11 +5,36 @@ import CytoscapeSyncher from '../../../model/cytoscape-syncher';
 import { BASE_URL } from '../../env';
 import { importCX, exportCX } from '../../../model/import-export/cx';
 import { importJSON, exportJSON } from '../../../model/import-export/json';
+import ndexClient from 'ndex-client';
 
 const http = Express.Router();
 
 const makeNetworkId = () => 'cy' + uuid();
 
+const postCXNetwork = async (importBody, rawcx) => {
+  //try {
+  //const body = req.body;
+  const id = makeNetworkId();
+  const cy = new Cytoscape();
+  const secret = uuid();
+  const publicUrl = `${BASE_URL}/document/${id}`;
+  const privateUrl = `${publicUrl}/${secret}`;
+
+  cy.data({ id });
+
+  const cySyncher = new CytoscapeSyncher(cy, 'secret');
+  importBody(cy, rawcx);
+
+  await cySyncher.create();
+
+  cySyncher.destroy();
+  cy.destroy();
+
+  return { id, secret, url: privateUrl, privateUrl, publicUrl };
+  /* } catch(err) {
+     next(err);
+   } */
+};
 /**
  * Post (create) a new network
  * @param {Function} importBody A function that takes (cy, body) and converts the body to cy
@@ -26,17 +51,33 @@ const postNetwork = async (importBody, req, res, next) => {
     const publicUrl = `${BASE_URL}/document/${id}`;
     const privateUrl = `${publicUrl}/${secret}`;
 
-    importBody(cy, body);
     cy.data({ id });
 
-    const cySyncher = new CytoscapeSyncher(cy, secret);
+    const cySyncher = new CytoscapeSyncher(cy, 'secret');
+    importBody(cy, body);
 
     await cySyncher.create();
+
 
     cySyncher.destroy();
     cy.destroy();
 
-    res.send({ id, secret, url: privateUrl, privateUrl, publicUrl });
+    let response = await postCXNetwork(importBody, req.body);
+    res.send(response);
+  } catch(err) {
+    next(err);
+  }
+};
+
+const postNetworkURL = async (importBody, req, res, next) => {
+  try {
+    const body = req.body;
+
+    const ndex0 = new ndexClient.NDEx(body.server + '/v2');
+    const rawcx2 = await ndex0.getCX2Network(body.uuid);
+
+    let response = await postCXNetwork(importBody, rawcx2);
+    res.send(response);
   } catch(err) {
     next(err);
   }
@@ -102,14 +143,22 @@ http.get('/json/:id', async function(req, res, next){
 /**
  * Create a new network document from CX format
  */
-http.post('/json', async function(req, res, next) {
+http.post('/cx', async function(req, res, next) {
   await postNetwork(importCX, req, res, next);
 });
 
 /**
+ * Create a new network document from CX format
+ */
+http.post('/cxurl', async function(req, res, next) {
+  await postNetworkURL(importCX, req, res, next);
+});
+
+
+/**
  * Get a network document in CX format
  */
-http.get('/json/:id', async function(req, res, next){
+http.get('/cx/:id', async function(req, res, next){
   await getNetwork(exportCX, req, res, next);
 });
 
